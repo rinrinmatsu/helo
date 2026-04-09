@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Effects
 import SddmComponents 2.0
 
 Rectangle {
@@ -8,7 +9,7 @@ Rectangle {
     width: Screen.width
     height: Screen.height
     z: 0
-    color: '#f0f0f0'
+    color: "transparent"
     property real uiScale: Math.max(0.75, Math.min(width / 1920, height / 1080))
     property int selectedUserIndex: userModel.lastIndex >= 0 ? userModel.lastIndex : 0
     property string selectedUserName: {
@@ -50,20 +51,69 @@ Rectangle {
     }
     property string appFontFamily: pixelFont.status === FontLoader.Ready ? pixelFont.name : "Monospace"
     property string configuredBackgroundPath: {
-        var path = config.Background || config.background || config.background_image || config.BackgroundImage || ""
+        var path = config.Background || ""
         return path ? ("" + path) : ""
     }
+    property string configuredProfilePath: {
+                var path = config.ProfileBlank || ""
+        return path ? ("" + path) : "" 
+    }
+    property bool backgroundScrollingEnabled: {
+        var value = config.Scrolling
+        if (value === undefined || value === null) {
+            value = config.scrolling
+        }
+        if (typeof value === "boolean") {
+            return value
+        }
+        var normalized = ("" + value).toLowerCase()
+        return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "on"
+    }
+    property int backgroundScrollDurationMs: {
+        var value = config.ScrollDuration || config.scroll_duration || 60
+        var seconds = Number(value)
+        if (isNaN(seconds) || seconds <= 0) {
+            return 60000
+        }
+        return Math.round(seconds * 1000)
+    }
     property bool showBackgroundDebug: true
+    property bool avatarOverlayEnabled: true
+    property real avatarOverlayStrength: 0.78
 
     // Background
-    Image {
-        id: bg
+    Item {
+        id: bgViewport
         anchors.fill: parent
-        source: "images/default_white.ping"
-        fillMode: Image.PreserveAspectCrop
-        // asynchronous: true
-        // cache: true
-        z: -1
+        clip: true
+        z: 0
+
+        Image {
+            id: bg
+            anchors {
+                top: parent.top
+                bottom: parent.bottom
+            }
+            property real tileWidth: Math.max(1, implicitWidth)
+            width: root.backgroundScrollingEnabled ? parent.width + tileWidth : parent.width
+            x: root.backgroundScrollingEnabled ? bgScrollOffset.offset : 0
+            source: root.configuredBackgroundPath !== "" ? root.configuredBackgroundPath : "images/default_white.png"
+            fillMode: root.backgroundScrollingEnabled ? Image.Tile : Image.PreserveAspectCrop
+            // asynchronous: true
+            // cache: true
+        }
+
+        QtObject {
+            id: bgScrollOffset
+            property real offset: 0
+            NumberAnimation on offset {
+                running: root.backgroundScrollingEnabled && bg.status === Image.Ready && bg.tileWidth > 1
+                from: 0
+                to: -bg.tileWidth
+                duration: root.backgroundScrollDurationMs
+                loops: Animation.Infinite
+            }
+        }
     }
 
     // --- Clock (bottom-left) ---
@@ -81,7 +131,7 @@ Rectangle {
             id: clockText
             z: 11
             font.family: root.appFontFamily
-            font.pixelSize: 72 * root.uiScale
+            font.pixelSize: 122 * root.uiScale
             font.weight: Font.Light
             color: "#aa096f"
             text: Qt.formatTime(new Date(), "hh:mm")
@@ -90,7 +140,7 @@ Rectangle {
         Text {
             z: 11
             font.family: root.appFontFamily
-            font.pixelSize: 16 * root.uiScale
+            font.pixelSize: 46 * root.uiScale
             color: "#ed41a8a2"
             text: Qt.formatDate(new Date(), "MMMM d, yyyy")
         }
@@ -98,7 +148,7 @@ Rectangle {
         Text {
             z: 11
             font.family: root.appFontFamily
-            font.pixelSize: 13 * root.uiScale
+            font.pixelSize: 43 * root.uiScale
             color: "#609ea0"
             text: Qt.formatDate(new Date(), "dddd")
         }
@@ -129,7 +179,7 @@ Rectangle {
             z: 20
             width: 280 * root.uiScale
             height: loginColumn.implicitHeight + (56 * root.uiScale)
-            color: Qt.rgba(1, 1, 1, 0.06)
+            color: Qt.rgba(0, 0, 0, 0.61)
             border.color: Qt.rgba(1, 1, 1, 0.12)
             border.width: 1
 
@@ -307,8 +357,8 @@ Rectangle {
                     width: parent.width
                     height: 38 * root.uiScale
                     color: mouseArea.pressed
-                        ? Qt.rgba(0.45, 0.35, 1.0, 0.4)
-                        : Qt.rgba(0.45, 0.35, 1.0, 0.22)
+                        ? Qt.rgba(0.66, 0.03, 0.43, 0.7)
+                        : Qt.rgba(0.66, 0.03, 0.43)
                     border.color: Qt.rgba(0.6, 0.5, 1.0, mouseArea.containsMouse ? 0.7 : 0.4)
                     border.width: 1
 
@@ -385,13 +435,13 @@ Rectangle {
             leftPadding: 28 * root.uiScale
             rightPadding: 0
 
-            // Avatar circle
+            // Avatar
             Rectangle {
                 z: 21
                 width: loginColumn.implicitHeight + (56 * root.uiScale)
                 height: loginColumn.implicitHeight + (56 * root.uiScale)
-                color: "#000000"
-                border.color: Qt.rgba(1, 0, 0.945, 0.5)
+                color: '#9effffff'
+                border.color: Qt.rgba(0, 0, 0, 0.5)
                 border.width: 2
                 anchors.horizontalCenter: parent.horizontalCenter
 
@@ -400,24 +450,32 @@ Rectangle {
                     z: 22
                     anchors.fill: parent
                     anchors.margins: 2 * root.uiScale
-                    source: root.selectedUserAvatar
+                    source: root.selectedUserAvatar !== "" ? root.selectedUserAvatar : root.configuredProfilePath
                     fillMode: Image.PreserveAspectCrop
-                    // layer.enabled: true
-                    // layer.effect: null
                     visible: status === Image.Ready
+                    opacity: root.selectedUserAvatar !== "" ? 1 : 0.5
                 }
 
-                // Fallback icon if no avatar
-                Text {
-                    z: 23
-                    anchors.centerIn: parent
-                    visible: userAvatar.status !== Image.Ready
-                    text: "?" + root.selectedUserName.charAt(0).toUpperCase()
-                    font.family: root.appFontFamily
-                    font.pixelSize: 50 * root.uiScale
-                    font.weight: Font.Light
-                    color: "#e0d8ff"
-                }
+                // Fallback stuff if no avatar
+                // Text {
+                //     z: 23
+                //     anchors.centerIn: parent
+                //     visible: userAvatar.status !== Image.Ready
+                //     text: "?" + root.selectedUserName.charAt(0).toUpperCase()
+                //     font.family: root.appFontFamily
+                //     font.pixelSize: 50 * root.uiScale
+                //     font.weight: Font.Light
+                //     color: '#000000'
+                // }
+                // Image {
+                //     z: 23
+                //     width: parent.width
+                //     height: parent.height
+                //     source: root.configuredProfilePath 
+                //     fillMode: Image.PreserveAspectFit
+                //     anchors.centerIn: parent
+                //     visible: userAvatar.status !== Image.Ready
+                // }
             }
 
             Text {
