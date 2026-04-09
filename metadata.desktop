@@ -1,0 +1,9 @@
+[SddmGreeterTheme]
+Name=hiiiii
+Description=say hiiiii
+Author=rinirnmatsu
+Version=1.0.0
+Website=
+# Screenshot=preview.png
+MainScript=Main.qml
+QtVersion=6
