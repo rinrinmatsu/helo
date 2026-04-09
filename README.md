@@ -4,4 +4,4 @@ arts drawn in drawing by me
 
 arrow drawn in some random svg pixel drawing website
 
-fronts list (will add below later)
+fonts list (will add below later)
