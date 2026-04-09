@@ -50,6 +50,19 @@ Rectangle {
         source: "fonts/Lovelt__.ttf"
     }
     property string appFontFamily: pixelFont.status === FontLoader.Ready ? pixelFont.name : "Monospace"
+
+    FontLoader {
+        id: clockFont
+        source: "fonts/Beyond Wonderland.ttf"
+    }
+    property string clockFontFamily: clockFont.status === FontLoader.Ready ? clockFont.name : "Monoscape"
+
+    FontLoader {
+        id: athensFont
+        source: "fonts/athens_free.ttf"
+    }
+    property string athensFontFamily: athensFont.status === FontLoader.Ready ? athensFont.name : "Monospace"
+
     property string configuredBackgroundPath: {
         var path = config.Background || ""
         return path ? ("" + path) : ""
@@ -77,9 +90,6 @@ Rectangle {
         }
         return Math.round(seconds * 1000)
     }
-    property bool showBackgroundDebug: true
-    property bool avatarOverlayEnabled: true
-    property real avatarOverlayStrength: 0.78
 
     // Background
     Item {
@@ -101,6 +111,14 @@ Rectangle {
             fillMode: root.backgroundScrollingEnabled ? Image.Tile : Image.PreserveAspectCrop
             // asynchronous: true
             // cache: true
+        }
+
+        MultiEffect {
+            source: bg
+            anchors.fill: bg
+            blurEnabled: true
+            blur:0.7
+            blurMax: 32
         }
 
         QtObject {
@@ -130,26 +148,46 @@ Rectangle {
         Text {
             id: clockText
             z: 11
-            font.family: root.appFontFamily
-            font.pixelSize: 122 * root.uiScale
+            font.family: root.clockFontFamily
+            font.pixelSize: 222 * root.uiScale
             font.weight: Font.Light
             color: "#aa096f"
             text: Qt.formatTime(new Date(), "hh:mm")
+            visible: false
+        }
+
+        MultiEffect {
+            source: clockText
+            width: clockText.width
+            height: clockText.height
+            // anchors.fill: clockText
+            
+            shadowEnabled: true
+            shadowColor: "#aa096f"
+            shadowBlur: 1
+            shadowOpacity: 1
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 0
+
+            blurEnabled: true
+            blur: 0.1
+            
+            brightness: 0.2
         }
 
         Text {
             z: 11
             font.family: root.appFontFamily
-            font.pixelSize: 46 * root.uiScale
-            color: "#ed41a8a2"
+            font.pixelSize: 35 * root.uiScale
+            color: Qt.rgba(0, 1, 0.95, 0.68)
             text: Qt.formatDate(new Date(), "MMMM d, yyyy")
         }
 
         Text {
             z: 11
             font.family: root.appFontFamily
-            font.pixelSize: 43 * root.uiScale
-            color: "#609ea0"
+            font.pixelSize: 25 * root.uiScale
+            color: Qt.rgba(0, 0.95, 1, 0.5)
             text: Qt.formatDate(new Date(), "dddd")
         }
 
@@ -159,6 +197,117 @@ Rectangle {
             repeat: true
             onTriggered: {
                 clockText.text = Qt.formatTime(new Date(), "hh:mm")
+            }
+        }
+    }
+
+    // placeholder buttons
+    Row{
+        z: 15
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: parent.bottom
+            bottomMargin: 64 * root.uiScale
+        }
+        spacing: 12 * root.uiScale
+
+        Rectangle {
+            z:16
+            width: 50 * root.uiScale
+            height: 50 * root.uiScale
+            color: Qt.rgba(0, 0, 0, 0.35)
+            border.color: Qt.rgba(1, 1, 1, hbmouse.containsMouse ? 1 : 0.12)
+            border.width: 1
+
+            MouseArea {
+                id: hbmouse
+                z: 18
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    sddm.hibernate()
+                }
+
+            Text {
+                z:17
+                text: "HB"
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                font.family: root.appFontFamily
+                font.pixelSize: 25 * root.uiScale
+                font.letterSpacing: 1 * root.uiScale
+                color: '#3a86d3'
+                }
+            }
+        }
+
+        Rectangle {
+            z:16
+            width: 50 * root.uiScale
+            height: 50 * root.uiScale
+            color: Qt.rgba(0, 0, 0, 0.35)
+            border.color: Qt.rgba(1, 1, 1, rsmouse.containsMouse ? 1 : 0.12)
+            border.width: 1
+
+            MouseArea {
+                        id: rsmouse
+                        z: 18
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            sddm.reboot()
+                        }
+            }
+
+            Text {
+                z:17
+                text: "RS"
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                font.family: root.appFontFamily
+                font.pixelSize: 25 * root.uiScale
+                font.letterSpacing: 1 * root.uiScale
+                color: '#3ad372'
+
+            }
+        }
+
+        Rectangle {
+            z: 16
+            width: 50 * root.uiScale
+            height: 50 * root.uiScale
+            color: Qt.rgba(0, 0, 0, 0.35)
+            border.color: Qt.rgba(1, 1, 1, rbmouse.containsMouse ? 1 : 0.12)
+            border.width: 1
+
+            MouseArea {
+                id: rbmouse
+                z: 18
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    sddm.powerOff()
+                }
+            }
+
+            Text {
+                z:17
+                text: "RB"
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                font.family: root.appFontFamily
+                font.pixelSize: 25 * root.uiScale
+                font.letterSpacing: 1 * root.uiScale
+                color: '#d33a3a'
             }
         }
     }
@@ -369,8 +518,8 @@ Rectangle {
                     Text {
                         z: 23
                         anchors.centerIn: parent
-                        text: "Epipháneia"
-                        font.family: root.appFontFamily
+                        text: "Epiphaeia" //Epipháeia
+                        font.family: root.clockFontFamily
                         font.pixelSize: 15 * root.uiScale
                         color: "#c8b8ff"
                         font.letterSpacing: 0.5 * root.uiScale
@@ -457,16 +606,16 @@ Rectangle {
                 }
 
                 // Fallback stuff if no avatar
-                // Text {
-                //     z: 23
-                //     anchors.centerIn: parent
-                //     visible: userAvatar.status !== Image.Ready
-                //     text: "?" + root.selectedUserName.charAt(0).toUpperCase()
-                //     font.family: root.appFontFamily
-                //     font.pixelSize: 50 * root.uiScale
-                //     font.weight: Font.Light
-                //     color: '#000000'
-                // }
+                Text {
+                    z: 23
+                    anchors.centerIn: parent
+                    visible: root.selectedUserAvatar === ""
+                    text: "Aprosopon" + root.selectedUserName.charAt(0).toUpperCase()
+                    font.family: root.athensFontFamily
+                    font.pixelSize: 50 * root.uiScale
+                    font.weight: Font.Light
+                    color: '#000000'
+                }
                 // Image {
                 //     z: 23
                 //     width: parent.width
