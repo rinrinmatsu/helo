@@ -9,7 +9,7 @@ Rectangle {
     width: Screen.width
     height: Screen.height
     z: 0
-    color: "transparent"
+    color: "#000000"
     property real uiScale: Math.max(0.75, Math.min(width / 1920, height / 1080))
     property int selectedUserIndex: userModel.lastIndex >= 0 ? userModel.lastIndex : 0
     property string selectedUserName: {
@@ -44,24 +44,30 @@ Rectangle {
             selectedUserIndex = (selectedUserIndex + 1) % count
         }
     }
-
+    
     FontLoader {
-        id: pixelFont
+        id: loveLetterTW
         source: "fonts/Lovelt__.ttf"
     }
-    property string appFontFamily: pixelFont.status === FontLoader.Ready ? pixelFont.name : "Monospace"
+    property string appFontFamily: loveLetterTW.status === FontLoader.Ready ? loveLetterTW.name : "Monospace"
 
     FontLoader {
         id: clockFont
         source: "fonts/Beyond Wonderland.ttf"
     }
-    property string clockFontFamily: clockFont.status === FontLoader.Ready ? clockFont.name : "Monoscape"
+    property string clockFontFamily: clockFont.status === FontLoader.Ready ? clockFont.name : "Monospace"
 
     FontLoader {
         id: athensFont
         source: "fonts/athens_free.ttf"
     }
     property string athensFontFamily: athensFont.status === FontLoader.Ready ? athensFont.name : "Monospace"
+
+    // FontLoader {
+    //     id: heroinFont
+    //     source: "fonts/Got_Heroin.ttf"
+    // }
+    // property string heroinFontFamily: heroinFont.status === FontLoader.Ready ? heroinFont.name : "Monospace"
 
     property string configuredBackgroundPath: {
         var path = config.Background || ""
@@ -99,6 +105,7 @@ Rectangle {
         z: 0
 
         Image {
+            z : 1
             id: bg
             anchors {
                 top: parent.top
@@ -111,14 +118,18 @@ Rectangle {
             fillMode: root.backgroundScrollingEnabled ? Image.Tile : Image.PreserveAspectCrop
             // asynchronous: true
             // cache: true
+            visible: false
         }
 
         MultiEffect {
             source: bg
             anchors.fill: bg
-            blurEnabled: true
-            blur:0.7
-            blurMax: 32
+            // blurEnabled: true
+            // blur:0.7
+            // blurMax: 32
+
+            colorizationColor: Qt.rgba(0 ,0 ,0 , 1.0)
+            colorization: 0
         }
 
         QtObject {
@@ -132,10 +143,73 @@ Rectangle {
                 loops: Animation.Infinite
             }
         }
+
+        Image {
+            z: 2
+            id: bgOverlay1
+            // anchors.fill: parent
+            // anchors.centerIn: parent 
+            anchors.bottom: parent.bottom
+            source: "images/Texturelabs_Grunge_219L.png"
+            // fillMode: Image.PreserveAspectFit
+            width: parent.width
+            height: 3000 * uiScale
+            visible: false
+            opacity: 1
+        }
+
+        MultiEffect {
+            source: bgOverlay1
+            anchors.fill: bgOverlay1
+            // blurEnabled: true
+            // blur: 1
+
+            colorizationColor: Qt.rgba(0 ,0 ,0 , 1.0)
+            colorization: 1
+        }
+
+        Image {
+            z: 3
+            id: bgOverlay2
+            source: "images/flayer1.png"
+            height: 700 * uiScale
+            width: parent.height * 1.4
+            // fillMode: Image.Pad
+            anchors {
+                bottom: bgViewport.bottom
+                left: bgViewport.left
+            }
+            visible: false
+            opacity: 1
+        }
+
+        MultiEffect {
+            z: 4
+            source: bgOverlay2
+            anchors.fill: bgOverlay2
+            // blurEnabled: true
+            // blur: 0.7
+
+            colorizationColor: Qt.rgba(0 ,0 ,0 , 1.0)
+            colorization: 0.9
+        }
+
+
     }
+
+    // //overlays stuff
+    // Item {
+    //     id: overlaysViewport
+    //     anchors.fill : parent
+    //     clip: true
+    //     z: 1
+
+
+    // }
 
     // --- Clock (bottom-left) ---
     Column {
+        id: clockColumn
         z: 10
         anchors {
             left: parent.left
@@ -151,9 +225,38 @@ Rectangle {
             font.family: root.clockFontFamily
             font.pixelSize: 222 * root.uiScale
             font.weight: Font.Light
-            color: "#aa096f"
+            color: Qt.rgba(0.67, 0.04, 0.44, 0.88)
             text: Qt.formatTime(new Date(), "hh:mm")
             visible: false
+        }
+
+        Text {
+            id: dateTime
+            z: 11
+            font.family: root.appFontFamily
+            font.pixelSize: 35 * root.uiScale
+            color: Qt.rgba(0, 1, 0.95, 0.68)
+            text: Qt.formatDate(new Date(), "MMMM d, yyyy")
+            visible: false
+        }
+
+        Text {
+            id: dateWeek
+            z: 11
+            font.family: root.appFontFamily
+            font.pixelSize: 25 * root.uiScale
+            color: Qt.rgba(0, 0.95, 1, 0.5)
+            text: Qt.formatDate(new Date(), "dddd")
+            visible: false
+        }
+
+        Timer {
+            interval: 1000
+            running: true
+            repeat: true
+            onTriggered: {
+                clockText.text = Qt.formatTime(new Date(), "hh:mm")
+            }
         }
 
         MultiEffect {
@@ -172,32 +275,45 @@ Rectangle {
             blurEnabled: true
             blur: 0.1
             
+            brightness: 0.5
+        }
+
+        MultiEffect {
+            source: dateTime
+            width: dateTime.width
+            height: dateTime.height
+            // anchors.fill: clockText
+            
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0.95, 1)
+            shadowBlur: 1
+            shadowOpacity: 1
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 0
+
+            blurEnabled: true
+            blur: 0.1
+            
             brightness: 0.2
         }
 
-        Text {
-            z: 11
-            font.family: root.appFontFamily
-            font.pixelSize: 35 * root.uiScale
-            color: Qt.rgba(0, 1, 0.95, 0.68)
-            text: Qt.formatDate(new Date(), "MMMM d, yyyy")
-        }
+        MultiEffect {
+            source: dateWeek
+            width: dateWeek.width
+            height: dateWeek.height
+            // anchors.fill: clockText
+            
+            shadowEnabled: true
+            shadowColor: Qt.rgba(0, 0.95, 1)
+            shadowBlur: 1
+            shadowOpacity: 1
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 0
 
-        Text {
-            z: 11
-            font.family: root.appFontFamily
-            font.pixelSize: 25 * root.uiScale
-            color: Qt.rgba(0, 0.95, 1, 0.5)
-            text: Qt.formatDate(new Date(), "dddd")
-        }
-
-        Timer {
-            interval: 1000
-            running: true
-            repeat: true
-            onTriggered: {
-                clockText.text = Qt.formatTime(new Date(), "hh:mm")
-            }
+            blurEnabled: true
+            blur: 0.1
+            
+            brightness: 0.2
         }
     }
 
@@ -240,6 +356,39 @@ Rectangle {
                 font.pixelSize: 25 * root.uiScale
                 font.letterSpacing: 1 * root.uiScale
                 color: '#3a86d3'
+                }
+            }
+        }
+
+        Rectangle {
+            z:16
+            width: 50 * root.uiScale
+            height: 50 * root.uiScale
+            color: Qt.rgba(0, 0, 0, 0.35)
+            border.color: Qt.rgba(1, 1, 1, slmouse.containsMouse ? 1 : 0.12)
+            border.width: 1
+
+            MouseArea {
+                id: slmouse
+                z: 18
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    sddm.hibernate()
+                }
+
+            Text {
+                z:17
+                text: "SL"
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                font.family: root.appFontFamily
+                font.pixelSize: 25 * root.uiScale
+                font.letterSpacing: 1 * root.uiScale
+                color: '#f8f8f8'
                 }
             }
         }
@@ -506,23 +655,45 @@ Rectangle {
                     width: parent.width
                     height: 38 * root.uiScale
                     color: mouseArea.pressed
-                        ? Qt.rgba(0.66, 0.03, 0.43, 0.7)
-                        : Qt.rgba(0.66, 0.03, 0.43)
-                    border.color: Qt.rgba(0.6, 0.5, 1.0, mouseArea.containsMouse ? 0.7 : 0.4)
-                    border.width: 1
+                        ? Qt.rgba(0, 0, 0, 0.7)
+                        : Qt.rgba(0, 0, 0)
+                    // border.color: Qt.rgba(0.6, 0.5, 1.0, mouseArea.containsMouse ? 0.7 : 0.4)
+                    // border.width: 1
 
                     function doLogin() {
                         sddm.login(root.selectedUserName, passwordInput.text, sessionCombo.index)
                     }
 
                     Text {
+                        id:loginText
                         z: 23
                         anchors.centerIn: parent
                         text: "Epiphaeia" //Epipháeia
                         font.family: root.clockFontFamily
-                        font.pixelSize: 15 * root.uiScale
-                        color: "#c8b8ff"
+                        font.pixelSize: 30 * root.uiScale
+                        color: mouseArea.containsMouse ? '#d268e2' : '#ffffff'
                         font.letterSpacing: 0.5 * root.uiScale
+                        visible: false
+                    }
+
+                    MultiEffect {
+                        z: 23
+                        visible: true
+                        source: loginText
+                        width: loginText.width
+                        height: loginText.height
+                        anchors.centerIn: parent                    
+                        shadowEnabled: true
+                        shadowColor: mouseArea.containsMouse ? '#d268e2' : '#ffffff'
+                        shadowBlur: 1
+                        shadowOpacity: 1
+                        shadowHorizontalOffset: 0
+                        shadowVerticalOffset: 0
+
+                        blurEnabled: true
+                        blur: 0.1
+                        
+                        brightness: 0.2
                     }
 
                     MouseArea {
@@ -589,7 +760,7 @@ Rectangle {
                 z: 21
                 width: loginColumn.implicitHeight + (56 * root.uiScale)
                 height: loginColumn.implicitHeight + (56 * root.uiScale)
-                color: '#9effffff'
+                color: '#00ffffff'
                 border.color: Qt.rgba(0, 0, 0, 0.5)
                 border.width: 2
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -601,21 +772,57 @@ Rectangle {
                     anchors.margins: 2 * root.uiScale
                     source: root.selectedUserAvatar !== "" ? root.selectedUserAvatar : root.configuredProfilePath
                     fillMode: Image.PreserveAspectCrop
-                    visible: status === Image.Ready
+                    visible: status === Image.Ready && root.selectedUserAvatar !== ""
+                    // visible: false
                     opacity: root.selectedUserAvatar !== "" ? 1 : 0.5
                 }
 
                 // Fallback stuff if no avatar
                 Text {
+                    id:avatarFallbackText
                     z: 23
                     anchors.centerIn: parent
-                    visible: root.selectedUserAvatar === ""
+                    // visible: root.selectedUserAvatar === ""
+                    visible: false
                     text: "Aprosopon" + root.selectedUserName.charAt(0).toUpperCase()
                     font.family: root.athensFontFamily
                     font.pixelSize: 50 * root.uiScale
                     font.weight: Font.Light
                     color: '#000000'
                 }
+
+                MultiEffect {
+                    z: 23
+                    visible: root.selectedUserAvatar === ""
+                    source: avatarFallbackText
+                    width: avatarFallbackText.width
+                    height: avatarFallbackText.height
+                    anchors.fill: avatarFallbackText
+                    
+                    shadowEnabled: true
+                    shadowColor: Qt.rgba(0, 0, 0)
+                    shadowBlur: 1
+                    shadowOpacity: 1
+                    shadowHorizontalOffset: 0
+                    shadowVerticalOffset: 0
+
+                    blurEnabled: true
+                    blur: 0.1
+                    
+                    brightness: 0
+                }
+
+                MultiEffect {
+                    z:22
+                    source: userAvatar
+                    anchors.fill: userAvatar
+
+                    // contrast: root.selectedUserAvatar === "" ? 1.0 : 0
+                    // colorization: root.selectedUserAvatar === "" ? 1.0 : 0
+                    // colorizationColor: Qt.rgba(1 ,1 ,1 , 1.0)
+                    // brightness:  root.selectedUserAvatar === "" ? -1.0 : 0 // Inverts colors  
+                }
+
                 // Image {
                 //     z: 23
                 //     width: parent.width
@@ -635,6 +842,7 @@ Rectangle {
                 font.pixelSize: 13 * root.uiScale
                 color: "#c0c0d8"
             }
+
 
             // Online indicator
             // Rectangle {
